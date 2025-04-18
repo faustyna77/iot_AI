@@ -170,4 +170,4 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',  # ← Google
     'django.contrib.auth.backends.ModelBackend', # ← domyślne Django
 )
-LOGIN_REDIRECT_URL = "/auth/google-redirect/"
+LOGIN_REDIRECT_URL = "https://fastinatechnology.streamlit.app"
