@@ -1,4 +1,8 @@
 import streamlit as st
+import sys
+import os
+
+
 import pandas as pd
 from influxdb_client import InfluxDBClient
 from datetime import datetime, timedelta
@@ -8,6 +12,10 @@ from login import login_user
 from register import register_user
 import os
 from dotenv import load_dotenv
+import sys
+from manual_control import write_decision
+
+from agent import ai_decision
 
 # Ładowanie zmiennych środowiskowych
 load_dotenv()
@@ -54,10 +62,10 @@ else:
         
         load_dotenv()  # Załaduj zmienne z pliku .env
 
-        INFLUXDB_URL = os.getenv["INFLUXDB_URL"]
-        INFLUXDB_TOKEN = os.getenv["INFLUXDB_TOKEN"]
-        INFLUXDB_ORG = os.getenv["INFLUXDB_ORG"]
-        INFLUXDB_BUCKET = os.getenv["INFLUXDB_BUCKET"]
+        INFLUXDB_URL = os.getenv("INFLUXDB_URL")
+        INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
+        INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
+        INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
         
 
 
@@ -90,7 +98,7 @@ else:
                 result = client.query_api().query_data_frame(query)
                 if not result.empty:
                     result['_time'] = pd.to_datetime(result['_time'])
-                    return result[['_time', 'temperature', 'humidity']]
+                    return result[['_time', 'temperature', 'humidity','lux','output_current','charging_current','predicted']]
                 return pd.DataFrame()
             except Exception as e:
                 st.error(f"Błąd zapytania sensorów: {e}")
@@ -137,10 +145,12 @@ else:
         # Pobieranie danych
         df_sensor = query_sensor_data(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
         df_predicted = query_predicted_temp(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
+        st.write("Kolumny dostępne w df_sensor:", df_sensor.columns.tolist())
 
         # Sprawdzanie, czy dane są dostępne
         if not df_sensor.empty:
-            col1, col2 = st.columns(2)
+            col1, col2,col3 = st.columns(3)
+            col4,col5=st.columns(2)
 
             # Status systemu awaryjnego
             if not df_predicted.empty:
@@ -169,13 +179,70 @@ else:
                 fig_humid = px.line(df_sensor, x='_time', y='humidity', title="Wilgotność")
                 fig_humid.update_layout(yaxis_title="Wilgotność (%)")
                 st.plotly_chart(fig_humid, use_container_width=True)
-
+            with col3:
+                st.subheader("Oświetlenie")
+                fig_lux = px.line(df_sensor, x='_time', y='lux', title="Natężenie oświetlenia")
+                fig_lux.update_layout(yaxis_title="natężenie (lux)")
+                st.plotly_chart(fig_lux, use_container_width=True)
+            with col4:
+                st.subheader("prąd ładowania")
+                fig_charge = px.line(df_sensor, x='_time', y='charging_current', title="Prąd ładowania")
+                fig_charge.update_layout(yaxis_title="prąd ładowania(A)")
+                st.plotly_chart(fig_charge, use_container_width=True)
+            with col5:
+                st.subheader("prąd wyjściowy 1")
+                fig_output = px.line(df_sensor, x='_time', y='output_current', title="Prąd wyjściowy 1")
+                fig_output.update_layout(yaxis_title="prąd wyjściowy 1 (A)")
+                st.plotly_chart(fig_output, use_container_width=True)
             # Tabela danych
             st.subheader("Ostatnie odczyty")
             st.dataframe(df_sensor.tail(10))
+            st.title("📡 Monitorowanie systemu AI IoT")
+           
         else:
             st.error("Brak dostępnych danych dla wybranego zakresu czasu.")
-
+        
         # Stopka
+        if st.button("🔍 Zezwól na  wykonanie decyzji przez agenta "):
+
+            st.session_state["run_agent"] = True
+
+        if st.session_state.get("run_agent"):
+
+            with st.spinner("Agent myśli..."):
+                 
+                 decision, reason = ai_decision(df_sensor)
+                 st.success(f"🧠 Decyzja agenta: **{decision}**")
+                 st.markdown(f"**Uzasadnienie:** {reason}")
+            st.session_state["run_agent"] = False
+
+
+             
+                 
+                 
+                 
+                 
+                 
+                   
+                    
+        if st.button("🔍 Sam wykonaj decyzję"):
+
+
+            st.session_state["manual_mode"] = True
+
+        if st.session_state.get("manual_mode"):
+            st.markdown("### Wybierz decyzję ręcznie:")
+            col1, col2, col3 = st.columns(3)
+            if col1.button("⚡ CHARGE"):
+                write_decision("CHARGE")
+                st.session_state["manual_mode"] = False
+            if col2.button("🔋 DISCHARGE"):
+                write_decision("DISCHARGE")
+                st.session_state["manual_mode"] = False
+            if col3.button("⏸ OFF"):
+                write_decision("OFF")
+                st.session_state["manual_mode"] = False
+
+
         st.markdown("---")
         st.caption("Dane z InfluxDB & FATISSA'S TECHNOLOGY")
