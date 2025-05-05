@@ -1,8 +1,9 @@
 import streamlit as st
 import sys
 import os
-
-
+from load_model import load_model_and_scaler_from_neon
+import joblib
+import numpy as np
 import pandas as pd
 from influxdb_client import InfluxDBClient
 from datetime import datetime, timedelta
@@ -14,6 +15,15 @@ import os
 from dotenv import load_dotenv
 import sys
 from manual_control import write_decision
+import psycopg2
+import joblib
+import streamlit as st
+import numpy as np
+import psycopg2
+import urllib.parse as up
+import pickle
+import os
+
 
 from agent import ai_decision
 
@@ -147,7 +157,7 @@ else:
         # Pobieranie danych
         df_sensor = query_sensor_data(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
         df_predicted = query_predicted_temp(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
-        st.write("Kolumny dostępne w df_sensor:", df_sensor.columns.tolist())
+        
 
         # Sprawdzanie, czy dane są dostępne
         if not df_sensor.empty:
@@ -198,13 +208,51 @@ else:
                 st.plotly_chart(fig_output, use_container_width=True)
             # Tabela danych
             st.subheader("Ostatnie odczyty")
-            st.dataframe(df_sensor.tail(10))
+            st.dataframe(df_sensor.tail(800))
             st.title("📡 Monitorowanie systemu AI IoT")
            
         else:
             st.error("Brak dostępnych danych dla wybranego zakresu czasu.")
         
-        # Stopka
+       
+        model_option = st.selectbox(
+                "Wybierz model AI:",
+                (
+                    "microsoft/mai-ds-r1:free",
+                    "gpt-3.5-turbo",
+                    "opengvlab/internvl3-14b:free",
+                    "microsoft/mai-ds-r1:free"
+                )
+            )
+        num_records = st.slider(
+            "Ile ostatnich pomiarów przesłać do AI?",
+            min_value=5,
+            max_value=30,
+            step=5,
+            value=5
+        )
+
+        model_name=st.selectbox("Wybierz model do przewifdzenia:", ("model_v1", "model_v2"))
+
+        model, scaler = load_model_and_scaler_from_neon(model_name)
+
+        # Przewidywanie na podstawie ostatnich danych
+        if st.button("🔮 Przewiduj prąd wyjściowy"):
+
+
+
+            if not df_sensor.empty:
+                
+
+
+                last_row = df_sensor.iloc[-1]
+                X_new = np.array([[last_row['temperature'], last_row['humidity'], last_row['lux'], last_row['charging_current']]])
+                X_new_scaled = scaler.transform(X_new)
+                y_pred = model.predict(X_new_scaled)
+                st.success(f"🔮 Przewidywany prąd wyjściowy: {y_pred[0]:.2f} A")
+            else:
+                st.warning("Brak danych do przewidzenia!")
+
         if st.button("🔍 Zezwól na  wykonanie decyzji przez agenta "):
 
             st.session_state["run_agent"] = True
@@ -213,7 +261,7 @@ else:
 
             with st.spinner("Agent myśli..."):
                  
-                 decision, reason = ai_decision(df_sensor)
+                 decision, reason = ai_decision(df_sensor, model_option, num_records)
                  st.success(f"🧠 Decyzja agenta: **{decision}**")
                  st.markdown(f"**Uzasadnienie:** {reason}")
             st.session_state["run_agent"] = False

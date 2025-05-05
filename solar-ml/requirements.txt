@@ -1,0 +1,8 @@
+streamlit
+influxdb-client
+scikit-learn
+joblib
+python-dotenv
+langchain
+langchain-openai
+openai

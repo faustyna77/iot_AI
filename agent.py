@@ -8,21 +8,23 @@ from datetime import datetime, timezone
 load_dotenv()
 
     # LLM model
-llm = ChatOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        model="microsoft/mai-ds-r1:free",
-        temperature=0.2,
-    )
+
 sensor_data = get_data()
 
 
-def ai_decision(sensor_data: dict) -> tuple[str, str]:
+def ai_decision(sensor_data: dict, model_name: str, num_records: int) -> tuple[str, str]:
+    llm = ChatOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        model=model_name,
+        temperature=0.2,
+    )
     
-    formatted = "\n".join([f"{k}: {v}" for k, v in list(sensor_data.items())[-5:]])
+    formatted = "\n".join([f"{k}: {v}" for k, v in list(sensor_data.items())[-num_records:]])
+   
 
     prompt = f"""
-Dane z czujników:
+Dane z czujników (ostatnie {num_records} pomiarów):
 {formatted}
 
 Zalecana akcja (jedna z: CHARGE, DISCHARGE, OFF).
