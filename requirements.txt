@@ -6,3 +6,4 @@ influxdb-client
 psycopg2-binary
 joblib
 langchain-openai
+scikit-learn
