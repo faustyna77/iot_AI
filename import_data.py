@@ -3,11 +3,12 @@ from influxdb_client import InfluxDBClient
 import os
 from dotenv import load_dotenv
 from collections import defaultdict
+import streamlit as st
 def get_data():
-    url = os.getenv("INFLUXDB_URL")
-    token = os.getenv("INFLUXDB_TOKEN")
-    org = os.getenv("INFLUXDB_ORG")
-    bucket = os.getenv("INFLUXDB_BUCKET")
+    url = st.secrets["INFLUXDB_URL"]
+    token = st.secrets["INFLUXDB_TOKEN"]
+    org = st.secrets["INFLUXDB_ORG"]
+    bucket = st.secrets["INFLUXDB_BUCKET"]
 
     client = InfluxDBClient(url=url, token=token, org=org)
 
@@ -37,4 +38,4 @@ def get_data():
 
 if __name__ == "__main__":
     data = get_data()
-    print(data)
+   

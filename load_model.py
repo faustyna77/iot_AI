@@ -5,7 +5,7 @@ import os
 import streamlit as st
 
 def get_neon_connection():
-    DATABASE_URL = os.getenv("DATABASE_URL")
+    DATABASE_URL = st.secrets["DATABASE_URL"]
     if not DATABASE_URL:
         st.error("❌ Nie znaleziono zmiennej środowiskowej DATABASE_URL!")
       
@@ -42,7 +42,7 @@ def load_model_and_scaler_from_neon(model_name):
         st.success(f"✅ Model '{model_name}' i scaler zostały wczytane z Neon.")
         return model, scaler
     else:
-        st.success(f"❌ Nie znaleziono modelu lub scalera '{model_name}' w Neon.")
+        st.error(f"❌ Nie znaleziono modelu lub scalera '{model_name}' w Neon.")
         return None, None
 
 

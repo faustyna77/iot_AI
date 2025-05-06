@@ -73,10 +73,10 @@ else:
         load_dotenv()  # Załaduj zmienne z pliku .env
 
 
-        INFLUXDB_URL = os.getenv("INFLUXDB_URL")
-        INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
-        INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
-        INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
+        INFLUXDB_URL = st.secrets["INFLUXDB_URL"]
+        INFLUXDB_TOKEN = st.secrets["INFLUXDB_TOKEN"]
+        INFLUXDB_ORG = st.secrets["INFLUXDB_ORG"]
+        INFLUXDB_BUCKET = st.secrets["INFLUXDB_BUCKET"]
         
 
 

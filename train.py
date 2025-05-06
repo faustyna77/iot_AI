@@ -11,6 +11,7 @@ import psycopg2
 import urllib.parse as up
 from datetime import datetime, timedelta
 import pickle
+import streamlit as st
 
 
 # ===== 1️⃣ Ładowanie zmiennych środowiskowych =====
@@ -23,10 +24,7 @@ INFLUX_ORG = os.getenv("INFLUXDB_ORG")
 INFLUX_BUCKET = os.getenv("INFLUXDB_BUCKET")
 DATABASE_URL = os.getenv("DATABASE_URL")  # URL do Neon (Postgres)
 
-print("\n=== Konfiguracja InfluxDB ===")
-print(f"URL: {INFLUX_URL}")
-print(f"ORG: {INFLUX_ORG}")
-print(f"BUCKET: {INFLUX_BUCKET}\n")
+
 
 # ===== 2️⃣ Sprawdzenie poprawności =====
 
@@ -82,7 +80,7 @@ def get_neon_connection():
 # ===== 6️⃣ Pobierz dane =====
 
 now = datetime.utcnow()
-start_time = (now - timedelta(days=7)).isoformat() + "Z"
+start_time = (now - timedelta(days=30)).isoformat() + "Z"
 end_time = now.isoformat() + "Z"
 
 print(f"Pobieranie danych od {start_time} do {end_time}...")

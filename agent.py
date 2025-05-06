@@ -5,6 +5,7 @@ from langchain_core.messages import HumanMessage
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+import streamlit as st
 load_dotenv()
 
     # LLM model
@@ -15,7 +16,7 @@ sensor_data = get_data()
 def ai_decision(sensor_data: dict, model_name: str, num_records: int) -> tuple[str, str]:
     llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY"),
+        api_key=st.secrets["OPENROUTER_API_KEY"],
         model=model_name,
         temperature=0.2,
     )
@@ -45,9 +46,9 @@ REASON: ...
     
     if decision:
         influx = InfluxDBClient(
-            url=os.getenv("INFLUXDB_URL"),
-            token=os.getenv("INFLUXDB_TOKEN"),
-            org=os.getenv("INFLUXDB_ORG")
+            url=st.secrets["INFLUXDB_URL"],
+            token=st.secrets["INFLUXDB_TOKEN"],
+            org=st.secrets["INFLUXDB_ORG"]
         )
         write_api = influx.write_api(write_options=WriteOptions(batch_size=1))
         
@@ -57,10 +58,10 @@ REASON: ...
             .time(datetime.now(timezone.utc))
             
         
-        write_api.write(bucket=os.getenv("INFLUXDB_BUCKET"), record=point)
-        print("✅ Zapisano decyzję:", decision)
+        write_api.write(bucket=st.secrets["INFLUXDB_BUCKET"], record=point)
+        st.success("✅ Zapisano decyzję:", decision)
     else:
-        print("⚠️ Nie udało się odczytać decyzji z odpowiedzi.")
+        st.error("⚠️ Nie udało się odczytać decyzji z odpowiedzi.")
 
     return decision, reason
 
