@@ -21,7 +21,7 @@ def write_decision(decision):
 
     try:
         write_api.write(bucket=st.secrets["INFLUXDB_BUCKET"], record=point)
-        st.success("✅ Udało się zapisać punkt!")
+        st.success("✅ Zapisano decyzje ")
     except Exception as e:
         st.error("❌ Błąd przy zapisie:", e)
 
