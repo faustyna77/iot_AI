@@ -3,3 +3,4 @@ pandas
 plotly
 python-dotenv
 influxdb-client
+psycopg2-binary
