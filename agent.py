@@ -59,7 +59,8 @@ REASON: ...
             
         
         write_api.write(bucket=st.secrets["INFLUXDB_BUCKET"], record=point)
-        st.success("✅ Zapisano decyzję:", decision)
+        st.success(f"✅ Zapisano decyzję: **{decision}**")
+
     else:
         st.error("⚠️ Nie udało się odczytać decyzji z odpowiedzi.")
 
