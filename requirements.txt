@@ -17,3 +17,12 @@ influxdb-client
 matplotlib
 lightgbm
 scikit-learn
+streamlit
+pandas
+plotly
+python-dotenv
+influxdb-client
+matplotlib
+lightgbm
+scikit-learn
+psycopg2-binary
