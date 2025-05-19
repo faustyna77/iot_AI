@@ -1,7 +1,7 @@
 import streamlit as st
 import sys
 import os
-from train_charging_anomalion_off import train_charging_current_anomalion_off
+from train_charging_anomalion_off import train_charging_anomalion_off
 from analysis import show_anomalies, show_correlation, show_cleaned_series
 from train_lux_anomalion_off import train_lux_anomalion_off
 from load_model import load_model_and_scaler_from_neon
@@ -249,7 +249,7 @@ else:
                     if st.button("Trenuj model_humidity_ anomalion off "):
                         train_humidity_anomalion_off()
                     if st.button("Trenuj model_charging_current_anomalion off ⚡"):
-                        train_charging_current_anomalion_off()
+                        train_charging_anomalion_off()
                     
 
 

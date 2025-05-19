@@ -20,7 +20,7 @@ INFLUX_ORG = st.secrets["INFLUXDB_ORG"]
 INFLUX_BUCKET = st.secrets["INFLUXDB_BUCKET"]
 DATABASE_URL = st.secrets["DATABASE_URL"] 
 
-def train_charging_current_anomalion_off():
+def train_charging_anomalion_off():
     if not all([INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG, INFLUX_BUCKET, DATABASE_URL]):
         st.error("❌ Brakuje konfiguracji!")
         return
