@@ -1,7 +1,17 @@
 import streamlit as st
 import sys
 import os
+from train_charging_anomalion_off import train_charging_current_anomalion_off
+from analysis import show_anomalies, show_correlation, show_cleaned_series
+from train_lux_anomalion_off import train_lux_anomalion_off
 from load_model import load_model_and_scaler_from_neon
+from prediction import predict, model_features
+from train_lux import train_lux
+from train_temperature import train_temperature
+from train_humidity import train_humidity
+from train_charging_current import train_charging_current
+from train import train
+from train_humidity_anomalion_off import train_humidity_anomalion_off
 import joblib
 import numpy as np
 import pandas as pd
@@ -23,7 +33,7 @@ import psycopg2
 import urllib.parse as up
 import pickle
 import os
-
+from train_isfores import train_isolation
 
 from agent import ai_decision
 
@@ -73,10 +83,11 @@ else:
         load_dotenv()  # Załaduj zmienne z pliku .env
 
 
-        INFLUXDB_URL = os.getenv("INFLUXDB_URL")
-        INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
-        INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
-        INFLUXDB_BUCKET = os.getenv("INFLUXDB_BUCKET")
+        INFLUXDB_URL = st.secrets["INFLUXDB_URL"]
+        INFLUXDB_TOKEN = st.secrets["INFLUXDB_TOKEN"]
+        INFLUXDB_ORG = st.secrets["INFLUXDB_ORG"]
+        INFLUXDB_BUCKET = st.secrets["INFLUXDB_BUCKET"]
+        DATABASE_URL = st.secrets["DATABASE_URL"] 
         
 
 
@@ -142,7 +153,7 @@ else:
         )
 
         # Obliczanie zakresu czasu
-        now = datetime.utcnow()
+        now =datetime.utcnow()
         if time_range == "godzina":
             start_time = now - timedelta(hours=1)
         elif time_range == "24 poprzednie":
@@ -210,61 +221,95 @@ else:
             st.subheader("Ostatnie odczyty")
             st.dataframe(df_sensor.tail(800))
             st.title("📡 Monitorowanie systemu AI IoT")
+            if "show_training" not in st.session_state:
+                    
+                    st.session_state["show_training"] = False
+
+            if st.button("🧠 Przetrenuj modele"):
+                    st.session_state["show_training"] = not st.session_state["show_training"]
+
+            if st.session_state["show_training"]:
+                    st.subheader("⚙️ Wybierz model do trenowania")
+
+                    if st.button("🔁 Trenuj model_lux"):
+                        train_lux()
+                    if st.button("🌡️ Trenuj model_temperature"):
+                        train_temperature()
+                    if st.button("💧 Trenuj model_humidity"):
+                        train_humidity()
+                    if st.button("🔌 Trenuj model_charging"):
+                        train_charging_current()
+                    if st.button("⚡ Trenuj model_v1 (output_current)"):
+                        train()
+
+                    if st.button("⚡ Trenuj model_v1_ anomalion off (output_current)"):
+                        train_isolation()
+                    if st.button("⚡ Trenuj model_lux_ anomalion off (lux)"):
+                        train_lux_anomalion_off()
+                    if st.button("Trenuj model_humidity_ anomalion off "):
+                        train_humidity_anomalion_off()
+                    if st.button("Trenuj model_charging_current_anomalion off ⚡"):
+                        train_charging_current_anomalion_off()
+                    
+
+
+                        
            
         else:
             st.error("Brak dostępnych danych dla wybranego zakresu czasu.")
         
+        
        
-        model_option = st.selectbox(
+        model_name = st.selectbox("Wybierz model do przewidzenia:", list(model_features.keys()))
+        model, scaler = load_model_and_scaler_from_neon(model_name)
+        # Przewidywanie na podstawie ostatnich danych
+        # --- Przycisk do przewidywania ---
+        if st.button("🔮 Przewiduj"):
+
+            from analysis import show_anomalies
+
+            predict(model, scaler, df_sensor, model_name)
+
+    # Automatycznie pobierz nazwę zmiennej do analizy anomalii
+            label = model_features[model_name]["label"]
+            show_anomalies(df_sensor, label)
+            show_cleaned_series(df_sensor, label=model_features[model_name]["label"])
+            
+            
+        # --- Obsługa trybu agentów AI ---
+        if "run_session" not in st.session_state:
+            st.session_state["run_session"] = False
+        if "run_agent" not in st.session_state:
+            st.session_state["run_agent"] = False
+
+        # --- Pokazanie panelu agenta AI ---
+        if st.button("🔄 Sterowanie za pomocą agentów AI"):
+            st.session_state["run_session"] = True
+
+        if st.session_state["run_session"]:
+            model_option = st.selectbox(
                 "Wybierz model AI:",
                 (
                     "microsoft/mai-ds-r1:free",
                     "gpt-3.5-turbo",
-                    "opengvlab/internvl3-14b:free",
-                    "microsoft/mai-ds-r1:free"
+                    "opengvlab/internvl3-14b:free"
                 )
             )
-        num_records = st.slider(
-            "Ile ostatnich pomiarów przesłać do AI?",
-            min_value=5,
-            max_value=30,
-            step=5,
-            value=5
-        )
+            num_records = st.slider(
+                "Ile ostatnich pomiarów przesłać do agenta AI?",
+                min_value=5,
+                max_value=30,
+                step=5,
+                value=5
+            )
 
-        model_name=st.selectbox("Wybierz model do przewifdzenia:", ("model_v1", "model_v2"))
+            if st.button("🔍 Zezwól na wykonanie decyzji przez agenta"):
+                with st.spinner("Agent myśli..."):
+                    decision, reason = ai_decision(df_sensor, model_option, num_records)
+                    st.success(f"🧠 Decyzja agenta: **{decision}**")
+                    st.markdown(f"**Uzasadnienie:** {reason}")
 
-        model, scaler = load_model_and_scaler_from_neon(model_name)
-
-        # Przewidywanie na podstawie ostatnich danych
-        if st.button("🔮 Przewiduj prąd wyjściowy"):
-
-
-
-            if not df_sensor.empty:
                 
-
-
-                last_row = df_sensor.iloc[-1]
-                X_new = np.array([[last_row['temperature'], last_row['humidity'], last_row['lux'], last_row['charging_current']]])
-                X_new_scaled = scaler.transform(X_new)
-                y_pred = model.predict(X_new_scaled)
-                st.success(f"🔮 Przewidywany prąd wyjściowy: {y_pred[0]:.2f} A")
-            else:
-                st.warning("Brak danych do przewidzenia!")
-
-        if st.button("🔍 Zezwól na  wykonanie decyzji przez agenta "):
-
-            st.session_state["run_agent"] = True
-
-        if st.session_state.get("run_agent"):
-
-            with st.spinner("Agent myśli..."):
-                 
-                 decision, reason = ai_decision(df_sensor, model_option, num_records)
-                 st.success(f"🧠 Decyzja agenta: **{decision}**")
-                 st.markdown(f"**Uzasadnienie:** {reason}")
-            st.session_state["run_agent"] = False
 
 
              

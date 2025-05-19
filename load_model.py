@@ -39,10 +39,10 @@ def load_model_and_scaler_from_neon(model_name):
     if model_row and scaler_row:
         model = pickle.loads(model_row[0])
         scaler = pickle.loads(scaler_row[0])
-        st.success(f"✅ Model '{model_name}' i scaler zostały wczytane z Neon.")
+        st.success(f"✅ Modele  i scalery zostały wczytane z Neon.")
         return model, scaler
     else:
-        st.success(f"❌ Nie znaleziono modelu lub scalera '{model_name}' w Neon.")
+        st.success(f"❌ Nie znaleziono modelu lub scalera  w Neon.")
         return None, None
 
 

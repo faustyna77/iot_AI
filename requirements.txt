@@ -3,3 +3,9 @@ pandas
 plotly
 python-dotenv
 influxdb-client
+
+
+
+
+matplotlib
+lightgbm
