@@ -10,6 +10,8 @@ import pickle
 import psycopg2
 import urllib.parse as up
 from datetime import datetime, timedelta
+from sklearn.model_selection import train_test_split
+
 import time
 import streamlit as st
 
