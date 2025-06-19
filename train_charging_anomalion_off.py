@@ -120,13 +120,11 @@ def train_charging_anomalion_off():
         conn = get_neon_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE models SET model_data = %s WHERE name = %s",
-            ("model_charging_anomalion_off", psycopg2.Binary(model_bytes))
-        )
+        "UPDATE models SET model_data = %s WHERE name = %s",
+        (psycopg2.Binary(model_bytes), "model_charging_anomalion_off"))
         cursor.execute(
-            "UPDATE models SET model_data = %s WHERE name = %s",
-            ("model_charging_anomalion_off_scaler", psycopg2.Binary(scaler_bytes))
-        )
+        "UPDATE models SET model_data = %s WHERE name = %s",
+        (psycopg2.Binary(scaler_bytes), "model_charging_anomalion_off_scaler"))
         conn.commit()
         cursor.close()
         conn.close()
