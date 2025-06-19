@@ -10,27 +10,31 @@ def get_data():
     bucket = os.getenv("INFLUXDB_BUCKET")
 
     client = InfluxDBClient(url=url, token=token, org=org)
-
-    query = f'''
-    from(bucket: "{bucket}")
-      |> range(start: -7h)
-      |> filter(fn: (r) => r._measurement == "env_measurements")
-      |> filter(fn: (r) => r.device == "ESP32")
-      |> filter(fn: (r) => r.location == "office")
-      |> filter(fn: (r) => r.sensor == "DHT22")
-    '''
-
     query_api = client.query_api()
-    tables = query_api.query(query)
+
+    def fetch_measurement(measurement):
+        query = f'''
+        from(bucket: "{bucket}")
+          |> range(start: -7h)
+          |> filter(fn: (r) => r._measurement == "{measurement}")
+          |> filter(fn: (r) => r.device == "ESP32")
+          |> filter(fn: (r) => r.location == "office")
+        '''
+        return query_api.query(query)
+
+    # oba measurementy
+    tables_env = fetch_measurement("env_measurements")
+    tables_vol = fetch_measurement("vol_measurements")
 
     data_by_time = defaultdict(dict)
 
-    for table in tables:
-        for record in table.records:
-            timestamp = record.get_time().isoformat()
-            field = record.get_field()
-            value = record.get_value()
-            data_by_time[timestamp][field] = value
+    for tables in [tables_env, tables_vol]:
+        for table in tables:
+            for record in table.records:
+                timestamp = record.get_time().isoformat()
+                field = record.get_field()
+                value = record.get_value()
+                data_by_time[timestamp][field] = value
 
     return dict(data_by_time)
 
