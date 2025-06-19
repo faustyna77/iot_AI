@@ -45,3 +45,8 @@ psycopg2-binary
 joblib
 langchain-openai
 scikit-learn
+streamlit
+PyPDF2
+langchain
+faiss-cpu
+sentence-transformers
