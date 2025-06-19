@@ -75,7 +75,7 @@ def fetch_data(start_time, end_time):
         query = f'''
         from(bucket: "{INFLUX_BUCKET}")
             |> range(start: {start_time}, stop: {end_time})
-            |> filter(fn: (r) => r["_measurement"] == "dht_measurements")
+            |> filter(fn: (r) => r["_measurement"] == "env_measurements")
             |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
         result = client.query_api().query_data_frame(query)
