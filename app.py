@@ -174,6 +174,7 @@ else:
         if not df_sensor.empty:
             col1, col2,col3 = st.columns(3)
             col4,col5=st.columns(2)
+            col6,col7,col8=st.columns(3)
 
             # Status systemu awaryjnego
             if not df_predicted.empty:
@@ -217,6 +218,22 @@ else:
                 fig_output = px.line(df_sensor, x='_time', y='output_current', title="Prąd wyjściowy 1")
                 fig_output.update_layout(yaxis_title="prąd wyjściowy 1 (A)")
                 st.plotly_chart(fig_output, use_container_width=True)
+            with col6:
+                st.subheader("Napięcie akumulatora")
+                fig_acu_vol = px.line(df_voltage, x='_time', y='acu_voltage', title="Napięcie [V]")
+                fig_acu_vol.update_layout(yaxis_title="napięcie akumulatora [V]")
+                st.plotly_chart(fig_acu_vol, use_container_width=True)
+            with col7:
+                st.subheader("Procent naładowania akumulatora")
+                fig_acu_percent = px.line(df_voltage, x='_time', y='battery_percent', title="Procent[%]")
+                fig_acu_percent.update_layout(yaxis_title="procent naładowania")
+                st.plotly_chart(fig_acu_percent, use_container_width=True)
+            with col8:
+                st.subheader("Napięcie paneli")
+                fig_panel_vol = px.line(df_voltage, x='_time', y='panel_voltage', title="Napięcie paneli [V]")
+                fig_panel_vol.update_layout(yaxis_title="napiecie wyjściowe paneli")
+                st.plotly_chart(fig_panel_vol, use_container_width=True)
+            
             # Tabela danych
             st.subheader("Ostatnie odczyty")
             st.dataframe(df_sensor.tail(800))
