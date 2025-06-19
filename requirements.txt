@@ -56,4 +56,7 @@ openai
 faiss-cpu
 PyPDF2
 tiktoken
+langchain-community
+faiss-cpu
+
 
