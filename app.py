@@ -397,7 +397,7 @@ else:
             splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
             return splitter.split_text(raw_text)
 
-        chunks = load_and_split_pdf("Integracja v9.2.pdf")
+        chunks = load_and_split_pdf("Integracja_v9.2.pdf")
 
         # 2. Embeddingi i wektoryzacja przez FAISS
         @st.cache_resource(show_spinner="🔎 Generowanie wektorów...")
