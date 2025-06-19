@@ -14,7 +14,7 @@ def get_data():
     query = f'''
     from(bucket: "{bucket}")
       |> range(start: -7h)
-      |> filter(fn: (r) => r._measurement == "dht_measurements")
+      |> filter(fn: (r) => r._measurement == "env_measurements")
       |> filter(fn: (r) => r.device == "ESP32")
       |> filter(fn: (r) => r.location == "office")
       |> filter(fn: (r) => r.sensor == "DHT22")
