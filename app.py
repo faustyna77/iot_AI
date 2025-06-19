@@ -386,4 +386,52 @@ else:
 
 
         st.markdown("---")
+        openrouter_key = st.secrets["OPENROUTER_API_KEY"]
+                # 1. Wczytaj PDF i przygotuj chunki
+        @st.cache_resource(show_spinner="🔄 Ładowanie dokumentu...")
+        def load_and_split_pdf(pdf_path):
+            reader = PdfReader(pdf_path)
+            raw_text = ""
+            for page in reader.pages:
+                raw_text += page.extract_text()
+            splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            return splitter.split_text(raw_text)
+
+        chunks = load_and_split_pdf("Integracja v9.2.pdf")
+
+        # 2. Embeddingi i wektoryzacja przez FAISS
+        @st.cache_resource(show_spinner="🔎 Generowanie wektorów...")
+        def create_qa_chain(chunks):
+            # Użyj lokalnego modelu do embeddingów
+            embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+            # FAISS wektorowa baza
+            vectorstore = FAISS.from_texts(chunks, embeddings)
+            retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+            # OpenRouter LLM
+            llm = ChatOpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=openrouter_key,
+                model="openai/gpt-4",  # lub inny np. "mistralai/mistral-7b-instruct"
+                temperature=0.2,
+            )
+
+            return RetrievalQA.from_chain_type(
+                llm=llm,
+                retriever=retriever
+            )
+
+        qa_chain = create_qa_chain(chunks)
+
+        # 3. Interfejs czatu
+        st.title("📘 Chat z pracą magisterską (RAG + FAISS)")
+        st.markdown("Zadaj pytanie dotyczące treści pracy :")
+
+        user_question = st.text_input("✍️ Twoje pytanie:")
+
+        if user_question:
+            with st.spinner("🤔 Szukam odpowiedzi..."):
+                response = qa_chain.run(user_question)
+                st.success(response)
         st.caption("Dane z InfluxDB & FATISSA'S TECHNOLOGY")
