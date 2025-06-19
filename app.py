@@ -309,7 +309,19 @@ else:
                 (
                     "microsoft/mai-ds-r1:free",
                     "gpt-3.5-turbo",
-                    "opengvlab/internvl3-14b:free"
+                    "opengvlab/internvl3-14b:free",
+                    "moonshotai/kimi-dev-72b:free",
+                    "deepseek/deepseek-r1-0528-qwen3-8b:free",
+                    "sarvamai/sarvam-m:free",
+                    "mistralai/devstral-small:free",
+                    "google/gemma-3n-e4b-it:free",
+                    "meta-llama/llama-3.3-8b-instruct:free",
+                    "nousresearch/deephermes-3-mistral-24b-preview:free",
+                    "qwen/qwen3-30b-a3b:free",
+                    "tngtech/deepseek-r1t-chimera:free",
+                    "shisa-ai/shisa-v2-llama3.3-70b:free",
+                    "agentica-org/deepcoder-14b-preview:free"
+
                 )
             )
             num_records = st.slider(
