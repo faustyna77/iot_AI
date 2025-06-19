@@ -126,6 +126,22 @@ else:
             except Exception as e:
                 st.error(f"Błąd zapytania sensorów: {e}")
                 return pd.DataFrame()
+        def query_voltage_data(start_time, end_time):
+            query_vol = f'''
+            from(bucket: "{INFLUXDB_BUCKET}")
+                |> range(start: {start_time}, stop: {end_time})
+                |> filter(fn: (r) => r["_measurement"] == "vol_measurements")
+                |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+            '''
+            try:
+                result_vol = client.query_api().query_data_frame(query_vol)
+                if not result_vol.empty:
+                    result_vol['_time'] = pd.to_datetime(result_vol['_time'])
+                    return result_vol[['_time', 'acu_power', 'acu_voltage','battery_percent','panel_power','panel_voltage']]
+                return pd.DataFrame()
+            except Exception as e:
+                st.error(f"Błąd zapytania sensorów: {e}")
+                return pd.DataFrame()
 
         # Funkcja do zapytania o przewidywaną temperaturę
         def query_predicted_temp(start_time, end_time):
@@ -167,6 +183,7 @@ else:
 
         # Pobieranie danych
         df_sensor = query_sensor_data(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
+        df_voltage=query_voltage_data(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
         df_predicted = query_predicted_temp(start_time.isoformat() + "Z", end_time.isoformat() + "Z")
         
 
