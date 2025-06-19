@@ -34,6 +34,12 @@ import urllib.parse as up
 import pickle
 import os
 from train_isfores import train_isolation
+from PyPDF2 import PdfReader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import RetrievalQA
 
 from agent import ai_decision
 
